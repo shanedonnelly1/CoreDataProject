@@ -61,13 +61,29 @@ import CoreData
 //    }
 //}
 
+enum FilterPredicate: CustomStringConvertible {
+    case beginsWith
+    case containsCaseSensitive
+    case containsCaseInsensitive
+    
+    var description: String {
+        switch self {
+        case .beginsWith: return "BEGINSWITH"
+        case .containsCaseSensitive: return "CONTAINS"
+        case .containsCaseInsensitive: return "CONTAINS[c]"
+        }
+    }
+}
+
 struct ContentView: View {
     @Environment(\.managedObjectContext) var moc
     @State var lastNameFilter = "A"
+    @State var sortDescriptors = [NSSortDescriptor(keyPath: \Singer.lastName, ascending: true)]
+    @State var filterPredicate: FilterPredicate = .beginsWith
 
     var body: some View {
         VStack {
-            FilteredList(filterKey: "lastName", filterValue: lastNameFilter) { (singer: Singer) in
+            FilteredList(filterKey: "lastName", filterValue: lastNameFilter, sortDescriptors: sortDescriptors, filterPredicate: filterPredicate) { (singer: Singer) in
                 Text("\(singer.wrappedFirstName) \(singer.wrappedLastName)")
             }
 
@@ -79,11 +95,23 @@ struct ContentView: View {
                 let ed = Singer(context: self.moc)
                 ed.firstName = "Ed"
                 ed.lastName = "Sheeran"
+                
+                let sam = Singer(context: self.moc)
+                sam.firstName = "Sam"
+                sam.lastName = "Smith"
+                
+                let ringo = Singer(context: self.moc)
+                ringo.firstName = "Ringo"
+                ringo.lastName = "Star"
 
                 let adele = Singer(context: self.moc)
                 adele.firstName = "Adele"
                 adele.lastName = "Adkins"
 
+                let adam = Singer(context: self.moc)
+                adam.firstName = "Adam"
+                adam.lastName = "Ant"
+                
                 try? self.moc.save()
             }
 
@@ -94,6 +122,23 @@ struct ContentView: View {
             Button("Show S") {
                 self.lastNameFilter = "S"
             }
+            
+            Button("Sort Ascending") {
+                self.sortDescriptors = [NSSortDescriptor(keyPath: \Singer.lastName, ascending: true)]
+            }
+            
+            Button("Sort Descending") {
+                self.sortDescriptors = [NSSortDescriptor(keyPath: \Singer.lastName, ascending: false)]
+            }
+            
+            Button("Begins with") {
+                self.filterPredicate = .beginsWith
+            }
+            
+            Button("Contains") {
+                self.filterPredicate = .containsCaseInsensitive
+            }
+            
         }
     }
 }
